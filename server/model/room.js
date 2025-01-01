@@ -16,7 +16,7 @@ const roomSchema = new mongoose.Schema({
   room: {
     type: String,
     required: true,
-    enum: ["Meeting Room", "Binding Room", "Printing Room"],
+    enum: ["Meeting Room", "Binding Room", "Printing Room", "Store Room"],
   },
   person: {
     type: String,

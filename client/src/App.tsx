@@ -10,11 +10,11 @@ import {
 import CalendarForm from "./components/CalendarForm";
 import { ApiResponse, Room } from "./types";
 import axios from "axios";
-import { BackgroundBeams } from "./components/ui/background-beams";
+// import { BackgroundBeams } from "./components/ui/background-beams";
 
 const App = () => {
-  const [startTime, setStartTime] = useState<string>("08:30 AM");
-  const [endTime, setEndTime] = useState<string>("08:30 AM");
+  // const [startTime, setStartTime] = useState<string>("08:30 AM");
+  // const [endTime, setEndTime] = useState<string>("08:30 AM");
   const [room, setRoom] = useState<string>("Meeting Room");
   const [person, setPerson] = useState<string>("");
   const [contact, setContact] = useState<string>("");
@@ -41,6 +41,7 @@ const App = () => {
 
   return (
     <div className="flex flex-col gap-4 justify-center min-h-screen items-center py-4">
+      <p className="text-lg font-semibold -mb-2">EasyBook</p>
       <div className="flex flex-col gap-4 p-4 border border-border rounded-md w-[90vw] sm:w-96">
         <Select onValueChange={(value) => setRoom(value)}>
           <div>
@@ -55,6 +56,7 @@ const App = () => {
                 <SelectItem value="Meeting Room">Meeting Room</SelectItem>
                 <SelectItem value="Binding Room">Binding Room</SelectItem>
                 <SelectItem value="Printing Room">Printing Room</SelectItem>
+                <SelectItem value="Store Room">Store Room</SelectItem>
               </SelectGroup>
             </SelectContent>
           </div>

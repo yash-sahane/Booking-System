@@ -225,7 +225,7 @@ function CalendarForm({
           name="date"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Date of meeting</FormLabel>
+              <FormLabel>Date of booking</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -325,7 +325,7 @@ function CalendarForm({
               <FormLabel>Person / Team name</FormLabel>
               <FormControl>
                 <Input
-                  className="placeholder:text-sm"
+                  className="text-sm"
                   value={person}
                   onChange={(e) => {
                     setValueHandler("person", e.target.value);
@@ -347,7 +347,7 @@ function CalendarForm({
               <FormLabel>Contact Number</FormLabel>
               <FormControl>
                 <Input
-                  className="placeholder:text-sm"
+                  className="text-sm"
                   value={contact}
                   type="text"
                   pattern="[0-9]{10}"

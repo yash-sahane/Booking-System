@@ -4,6 +4,9 @@ import cors from "cors";
 import { connectDB } from "./database/connect.js";
 import Room from "./routes/room.js";
 import { errMiddleware } from "./middleware/error.js";
+import job from "./cron/cron.js";
+
+job.start();
 
 const app = express();
 
