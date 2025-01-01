@@ -5,6 +5,7 @@ export type ApiResponse = {
 };
 
 export type Room = {
+  _id: string;
   date: Date;
   start_time: string;
   end_time: string;

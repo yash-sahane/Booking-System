@@ -41,7 +41,12 @@ const App = () => {
 
   return (
     <div className="flex flex-col gap-4 justify-center min-h-screen items-center py-4">
-      <p className="text-lg font-semibold -mb-2">EasyBook</p>
+      <div className="flex flex-col gap-1 items-center -mb-2">
+        <p className="text-lg font-semibold">EasyBook</p>
+        <p className=" text-sm text-gray-600 font-semibold mb-2">
+          Facility Booking by D&T
+        </p>
+      </div>
       <div className="flex flex-col gap-4 p-4 border border-border rounded-md w-[90vw] sm:w-96">
         <Select onValueChange={(value) => setRoom(value)}>
           <div>
@@ -79,7 +84,10 @@ const App = () => {
           <p className="text-sm">Meeting room has not booked yet. Book now.</p>
         ) : (
           bookings.map((booking) => (
-            <div className="flex items-start flex-col gap-4 border border-border rounded-md  p-3">
+            <div
+              key={booking._id}
+              className="flex items-start flex-col gap-4 border border-border rounded-md  p-3"
+            >
               <div className="flex items-start gap-4">
                 <span className="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full">
                   <span className="flex h-full w-full items-center justify-center rounded-full bg-muted">
@@ -113,7 +121,11 @@ const App = () => {
           ))
         )}
       </div>
-      {/* <BackgroundBeams /> */}
+      <div className="fixed bottom-0 bg-primary w-full flex justify-center items-center py-1">
+        <p className="text-xs text-center">
+          Designed & Developed by Interactive Product Development Team
+        </p>
+      </div>
     </div>
   );
 };
