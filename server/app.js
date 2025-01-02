@@ -14,6 +14,10 @@ config();
 
 connectDB();
 
+app.get("/", (req, res) => {
+  res.send("GET request send successfully");
+});
+
 app.use(express.json());
 app.use(cors());
 
