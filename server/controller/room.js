@@ -25,8 +25,19 @@ export const fetchBookings = async (req, res, next) => {
     }
 
     // Create a new Date object for the start and end of the selected day
-    const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0)); // Start of the selected date
-    const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999)); // End of the selected date
+    const startOfDay = new Date(Date.UTC(
+      selectedDate.getUTCFullYear(),
+      selectedDate.getUTCMonth(),
+      selectedDate.getUTCDate(),
+      0, 0, 0, 0
+    ));
+    
+    const endOfDay = new Date(Date.UTC(
+      selectedDate.getUTCFullYear(),
+      selectedDate.getUTCMonth(),
+      selectedDate.getUTCDate(),
+      23, 59, 59, 999
+    ));
 
     console.log("start of day ", startOfDay);
     console.log("end of day ", endOfDay);
