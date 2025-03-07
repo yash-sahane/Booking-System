@@ -28,6 +28,10 @@ export const fetchBookings = async (req, res, next) => {
     const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0)); // Start of the selected date
     const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999)); // End of the selected date
 
+    console.log("start of day ", startOfDay);
+    console.log("end of day ", endOfDay);
+    
+
     // Fetch bookings for the selected room and date range
     const bookings = await Room.find({
       room: roomName,

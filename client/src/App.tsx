@@ -22,6 +22,8 @@ const App = () => {
   const [date, setDate] = useState<Date>(new Date());
 
   useEffect(() => {
+    console.log(new Date().toISOString());
+
     const fetchMeetingRoomBookings = async () => {
       try {
         const { data } = await axios.post<ApiResponse>(
