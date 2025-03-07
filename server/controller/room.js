@@ -5,6 +5,9 @@ export const fetchBookings = async (req, res, next) => {
   try {
     const { roomName, date } = req.body;
 
+    console.log("Received date:", req.body.date);
+    console.log("Server time:", new Date().toISOString());
+
     // Ensure roomName is provided
     if (!roomName) {
       return next(new ErrorHandler("Room name is required", 400));
