@@ -68,96 +68,111 @@ function CalendarForm({ person, setPerson, contact, setContact, room, setDate, s
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     const { person, contact, date, startTime, endTime } = data;
 
-    const currentDate = new Date().toISOString().split('T')[0];
-    // const selectedDate = new Date(date);
-    // const selectedStartTime = new Date(
-    //   `${selectedDate.toDateString()} ${startTime}`
-    // );
-    // const selectedEndTime = new Date(
-    //   `${selectedDate.toDateString()} ${endTime}`
-    // );
-
-    // Check if the selected date is in the past
-    // if (
-    //   selectedDate.getDate() !== currentDate.getDate() &&
-    //   selectedDate < currentDate
-    // ) {
-    //   toast.error("You can't book a meeting room for a past date.");
-    //   return;
-    // }
-
-    // // Check if the selected start time is in the past
-    // if (selectedStartTime < currentDate) {
-    //   toast.error("You can't book a meeting room for a past start time.");
-    //   return;
-    // }
-
-    // // Check if the end time is earlier than the start time
-    // if (selectedEndTime <= selectedStartTime) {
-    //   toast.error("End time must be later than start time.");
-    //   return;
-    // }
-
-    if (date < currentDate) {
-      toast.error("You can't book for a past date.");
+    if (!room) {
+      toast.error("Please select a room.");
       return;
     }
 
-    // Fetch existing bookings for the room and date
-    const { data: existingBookingsData } = await axios.post<ApiResponse>(
-      `${import.meta.env.VITE_SERVER_URI}/api/room/`,
-      { roomName: room, date }
-    );
+    const currentDateTime = new Date();
+    const selectedDate = new Date(date);
 
-    if (existingBookingsData.success) {
-      const existingBookings = existingBookingsData.data;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize time to start of the day
 
-      const isOverlapping = existingBookings.some((booking: any) => {
-        const bookingStartTime = new Date(`${booking.date} ${booking.start_time}`);
-        const bookingEndTime = new Date(`${booking.date} ${booking.end_time}`);
-        const selectedStartTime = new Date(`${date} ${startTime}`);
-        const selectedEndTime = new Date(`${date} ${endTime}`);
-
-        return (
-          (selectedStartTime >= bookingStartTime && selectedStartTime < bookingEndTime) ||
-          (selectedEndTime > bookingStartTime && selectedEndTime <= bookingEndTime) ||
-          (selectedStartTime <= bookingStartTime && selectedEndTime >= bookingEndTime)
-        );
-      });
-
-      if (isOverlapping) {
-        toast.error("The selected time overlaps with an existing booking. Please choose a different time.");
-        return;
-      }
+    if (selectedDate < today) {
+      toast.error("You can't book a meeting room for a past date.");
+      return;
     }
 
-    // api call
+    // Convert `startTime` and `endTime` to 24-hour format
+    const parseTime = (time: string) => {
+      const [timePart, modifier] = time.split(" ");
+      let [hours, minutes] = timePart.split(":").map(Number);
+
+      if (modifier === "PM" && hours !== 12) hours += 12;
+      if (modifier === "AM" && hours === 12) hours = 0;
+
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+    };
+
+    // Convert to proper Date format
+    const formattedStartTime = parseTime(startTime);
+    const formattedEndTime = parseTime(endTime);
+
+    const selectedStartTime = new Date(`${date} ${formattedStartTime}`);
+    const selectedEndTime = new Date(`${date} ${formattedEndTime}`);
+
+    console.log(date, " ", startTime, " -> ", selectedStartTime);
+    console.log(date, " ", endTime, " -> ", selectedEndTime);
+
+    if (
+      date === currentDateTime.toISOString().split('T')[0] &&
+      selectedStartTime < currentDateTime
+    ) {
+      toast.error("Start time must be in the future.");
+      return;
+    }
+
+    if (selectedEndTime <= selectedStartTime) {
+      toast.error("End time must be later than start time.");
+      return;
+    }
+
     try {
+      // Fetch existing bookings for the room and date
+      const { data: existingBookingsData } = await axios.post<ApiResponse>(
+        `${import.meta.env.VITE_SERVER_URI}/api/room/`,
+        { roomName: room, date }
+      );
+
+      if (existingBookingsData.success) {
+        const isOverlapping = existingBookingsData.data.some((booking: any) => {
+          const bookingStartTime = new Date(`${booking.date}T${booking.start_time}`);
+          const bookingEndTime = new Date(`${booking.date}T${booking.end_time}`);
+
+          return (
+            (selectedStartTime >= bookingStartTime && selectedStartTime < bookingEndTime) ||
+            (selectedEndTime > bookingStartTime && selectedEndTime <= bookingEndTime) ||
+            (selectedStartTime <= bookingStartTime && selectedEndTime >= bookingEndTime)
+          );
+        });
+
+        if (isOverlapping) {
+          toast.error("The selected time overlaps with an existing booking. Please choose a different time.");
+          return;
+        }
+      }
+
+      // API call to add the booking
       const { data: addBookingData } = await axios.post<ApiResponse>(
         `${import.meta.env.VITE_SERVER_URI}/api/room/addBooking`,
         { date, startTime, endTime, roomName: room, person, contact }
       );
+
       if (addBookingData.success) {
         toast.success(addBookingData.message!);
 
         // Clear form fields on successful submission
         form.reset();
-        setPerson(""); // Clear other state variables if necessary
+        setPerson("");
         setContact("");
-      }
 
-      // fetch new bookings on success
-      const { data: fetchBookingData } = await axios.post<ApiResponse>(
-        `${import.meta.env.VITE_SERVER_URI}/api/room`,
-        { roomName: room, date }
-      );
-      if (fetchBookingData.success) {
-        setBookings(fetchBookingData.data);
+        // Fetch updated bookings
+        const { data: fetchBookingData } = await axios.post<ApiResponse>(
+          `${import.meta.env.VITE_SERVER_URI}/api/room`,
+          { roomName: room, date }
+        );
+
+        if (fetchBookingData.success) {
+          setBookings(fetchBookingData.data);
+        }
       }
-    } catch (e: any) {
-      console.log(e);
+    } catch (error) {
+      console.error("Booking error:", error);
+      toast.error("An error occurred while processing your booking. Please try again.");
     }
   }
+
 
   const timeOptions = Array.from({ length: 69 }).map((_, i) => {
     if (i <= 33) return null;
