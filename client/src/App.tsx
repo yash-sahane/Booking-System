@@ -22,7 +22,8 @@ const App = () => {
   const [date, setDate] = useState<Date>(new Date());
 
   useEffect(() => {
-    console.log(new Date().toISOString());
+    console.log(date);
+    
 
     const fetchMeetingRoomBookings = async () => {
       try {
