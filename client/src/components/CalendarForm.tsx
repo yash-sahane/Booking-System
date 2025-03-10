@@ -127,8 +127,21 @@ function CalendarForm({ person, setPerson, contact, setContact, room, setDate, s
 
       if (existingBookingsData.success) {
         const isOverlapping = existingBookingsData.data.some((booking: any) => {
-          const bookingStartTime = new Date(`${booking.date}T${booking.start_time}`);
-          const bookingEndTime = new Date(`${booking.date}T${booking.end_time}`);
+          // Extract only date part if booking.date is in ISO format
+          const bookingDate = booking.date.split('T')[0];
+
+          // Format start and end times properly
+          const formattedBookingStartTime = parseTime(booking.start_time);
+          const formattedBookingEndTime = parseTime(booking.end_time);
+
+          console.log('formattedBookingStartTime: ', formattedBookingStartTime, 'formattedBookingEndTime: ', formattedBookingEndTime);
+          console.log('booking date: ', bookingDate);
+
+          // Ensure proper Date object creation
+          const bookingStartTime = new Date(`${bookingDate}T${formattedBookingStartTime}:00`);
+          const bookingEndTime = new Date(`${bookingDate}T${formattedBookingEndTime}:00`);
+
+          console.log(bookingStartTime, ' ', bookingEndTime);
 
           return (
             (selectedStartTime >= bookingStartTime && selectedStartTime < bookingEndTime) ||
@@ -153,7 +166,9 @@ function CalendarForm({ person, setPerson, contact, setContact, room, setDate, s
         toast.success(addBookingData.message!);
 
         // Clear form fields on successful submission
-        form.reset();
+        form.reset({
+          date, // Keep the selected date
+        });
         setPerson("");
         setContact("");
 
