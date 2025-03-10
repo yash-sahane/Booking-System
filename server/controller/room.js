@@ -5,40 +5,42 @@ export const fetchBookings = async (req, res, next) => {
   try {
     const { roomName, date } = req.body;
 
-    console.log("Received date:", req.body.date);
+    console.log("Received date (from frontend):", date);
     console.log("Server time:", new Date().toISOString());
 
-    // Ensure roomName is provided
-    if (!roomName) {
-      return next(new ErrorHandler("Room name is required", 400));
-    }
+    if (!roomName) return next(new ErrorHandler("Room name is required", 400));
+    if (!date) return next(new ErrorHandler("Date is required", 400));
 
-    // Ensure date is provided
-    if (!date) {
-      return next(new ErrorHandler("Date is required", 400));
-    }
+    // Directly parse ISO date from frontend
+    // const selectedDate = new Date(date);
+    // if (isNaN(selectedDate.getTime())) {
+    //   return next(new ErrorHandler("Invalid date format", 400));
+    // }
 
-    // Convert the date to a JavaScript Date object
-    const selectedDate = new Date(date);
-    if (isNaN(selectedDate.getTime())) {
-      return next(new ErrorHandler("Invalid date format", 400));
-    }
+    // // Calculate start and end of day in UTC
+    // const startOfDay = new Date(Date.UTC(
+    //   selectedDate.getUTCFullYear(),
+    //   selectedDate.getUTCMonth(),
+    //   selectedDate.getUTCDate(),
+    //   0, 0, 0, 0
+    // ));
 
-    // Create a new Date object for the start and end of the selected day
-    const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0)); // Start of the selected date
-    const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999)); // End of the selected date
+    // const endOfDay = new Date(Date.UTC(
+    //   selectedDate.getUTCFullYear(),
+    //   selectedDate.getUTCMonth(),
+    //   selectedDate.getUTCDate(),
+    //   23, 59, 59, 999
+    // ));
 
-    console.log("start of day ", startOfDay);
-    console.log("end of day ", endOfDay);
+    // console.log("Corrected Start of Day (UTC):", startOfDay.toISOString());
+    // console.log("Corrected End of Day (UTC):", endOfDay.toISOString());
 
-
-    // Fetch bookings for the selected room and date range
+    // Fetch bookings using the corrected UTC time range
     const bookings = await Room.find({
       room: roomName,
-      date: { $gte: startOfDay, $lte: endOfDay }, // Date should be within the selected day
+      date,
     });
 
-    // Return the bookings found
     return res.json({
       success: true,
       data: bookings,

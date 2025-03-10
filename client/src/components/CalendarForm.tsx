@@ -38,21 +38,11 @@ import { ApiResponse, Room } from "@/types";
 import axios from "axios";
 
 const FormSchema = z.object({
-  date: z.date({
-    required_error: "Date & time is required!.",
-  }),
-  startTime: z.string({
-    required_error: "Start time is required!.",
-  }),
-  endTime: z.string({
-    required_error: "End time is required!.",
-  }),
-  person: z.string({
-    required_error: "Person / Team name is required!.",
-  }),
-  contact: z.string({
-    required_error: "Contact number is required!.",
-  }),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"), // YYYY-MM-DD format
+  startTime: z.string({ required_error: "Start time is required!" }),
+  endTime: z.string({ required_error: "End time is required!" }),
+  person: z.string({ required_error: "Person / Team name is required!" }),
+  contact: z.string({ required_error: "Contact number is required!" }),
 });
 
 type FormProps = {
@@ -61,58 +51,55 @@ type FormProps = {
   setPerson: React.Dispatch<React.SetStateAction<string>>;
   contact: string;
   setContact: React.Dispatch<React.SetStateAction<string>>;
-  setDate: React.Dispatch<React.SetStateAction<Date>>;
+  setDate: React.Dispatch<React.SetStateAction<string>>;
   setBookings: React.Dispatch<React.SetStateAction<Room[]>>;
 };
 
-function CalendarForm({
-  person,
-  setPerson,
-  contact,
-  setContact,
-  room,
-  setDate,
-  setBookings,
-}: FormProps) {
+function CalendarForm({ person, setPerson, contact, setContact, room, setDate, setBookings }: FormProps) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       startTime: "08:30 AM",
       endTime: "08:30 AM",
-      date: new Date(),
+      date: new Date().toISOString().split('T')[0],
     },
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     const { person, contact, date, startTime, endTime } = data;
 
-    const currentDate = new Date();
-    const selectedDate = new Date(date);
-    const selectedStartTime = new Date(
-      `${selectedDate.toDateString()} ${startTime}`
-    );
-    const selectedEndTime = new Date(
-      `${selectedDate.toDateString()} ${endTime}`
-    );
+    const currentDate = new Date().toISOString().split('T')[0];
+    // const selectedDate = new Date(date);
+    // const selectedStartTime = new Date(
+    //   `${selectedDate.toDateString()} ${startTime}`
+    // );
+    // const selectedEndTime = new Date(
+    //   `${selectedDate.toDateString()} ${endTime}`
+    // );
 
     // Check if the selected date is in the past
-    if (
-      selectedDate.getDate() !== currentDate.getDate() &&
-      selectedDate < currentDate
-    ) {
-      toast.error("You can't book a meeting room for a past date.");
-      return;
-    }
+    // if (
+    //   selectedDate.getDate() !== currentDate.getDate() &&
+    //   selectedDate < currentDate
+    // ) {
+    //   toast.error("You can't book a meeting room for a past date.");
+    //   return;
+    // }
 
-    // Check if the selected start time is in the past
-    if (selectedStartTime < currentDate) {
-      toast.error("You can't book a meeting room for a past start time.");
-      return;
-    }
+    // // Check if the selected start time is in the past
+    // if (selectedStartTime < currentDate) {
+    //   toast.error("You can't book a meeting room for a past start time.");
+    //   return;
+    // }
 
-    // Check if the end time is earlier than the start time
-    if (selectedEndTime <= selectedStartTime) {
-      toast.error("End time must be later than start time.");
+    // // Check if the end time is earlier than the start time
+    // if (selectedEndTime <= selectedStartTime) {
+    //   toast.error("End time must be later than start time.");
+    //   return;
+    // }
+
+    if (date < currentDate) {
+      toast.error("You can't book for a past date.");
       return;
     }
 
@@ -125,32 +112,21 @@ function CalendarForm({
     if (existingBookingsData.success) {
       const existingBookings = existingBookingsData.data;
 
-      // Check if the selected time overlaps with any existing bookings
       const isOverlapping = existingBookings.some((booking: any) => {
-        const bookingStartTime = new Date(
-          `${new Date(booking.date).toDateString()} ${booking.start_time}`
-        );
-        const bookingEndTime = new Date(
-          `${new Date(booking.date).toDateString()} ${booking.end_time}`
-        );
-
-        // console.log(selectedStartTime, bookingStartTime);
-        // console.log(selectedEndTime, bookingEndTime);
+        const bookingStartTime = new Date(`${booking.date} ${booking.start_time}`);
+        const bookingEndTime = new Date(`${booking.date} ${booking.end_time}`);
+        const selectedStartTime = new Date(`${date} ${startTime}`);
+        const selectedEndTime = new Date(`${date} ${endTime}`);
 
         return (
-          (selectedStartTime >= bookingStartTime &&
-            selectedStartTime < bookingEndTime) ||
-          (selectedEndTime > bookingStartTime &&
-            selectedEndTime <= bookingEndTime) ||
-          (selectedStartTime <= bookingStartTime &&
-            selectedEndTime >= bookingEndTime)
+          (selectedStartTime >= bookingStartTime && selectedStartTime < bookingEndTime) ||
+          (selectedEndTime > bookingStartTime && selectedEndTime <= bookingEndTime) ||
+          (selectedStartTime <= bookingStartTime && selectedEndTime >= bookingEndTime)
         );
       });
 
       if (isOverlapping) {
-        toast.error(
-          "The selected time overlaps with an existing booking. Please choose a different time."
-        );
+        toast.error("The selected time overlaps with an existing booking. Please choose a different time.");
         return;
       }
     }
@@ -165,13 +141,7 @@ function CalendarForm({
         toast.success(addBookingData.message!);
 
         // Clear form fields on successful submission
-        form.reset({
-          startTime: "08:30 AM",
-          endTime: "08:30 AM",
-          person: "",
-          contact: "",
-          date,
-        });
+        form.reset();
         setPerson(""); // Clear other state variables if necessary
         setContact("");
       }
@@ -248,10 +218,16 @@ function CalendarForm({
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={field.value}
+                    selected={field.value ? new Date(field.value) : undefined} // Convert string to Date
                     onSelect={(newDate) => {
-                      field.onChange(newDate); // Update form field value
-                      setDate(newDate as Date); // Update parent component state
+                      if (newDate) {
+                        const localDate = format(newDate, "yyyy-MM-dd"); // Format in local time
+                        field.onChange(localDate);
+                        setDate(localDate);
+                      } else {
+                        field.onChange("");
+                        setDate("");
+                      }
                     }}
                     initialFocus
                   />
